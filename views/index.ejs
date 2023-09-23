@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Itinerator 1.0</title>
+    <link href="https://fonts.googleapis.com/css?family=Poppins&display=swap" rel="stylesheet">
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+    <main>
+        <h1>Itinerator 1.0</h1>
+        <h2>Input Trip description</h2>
+        <form id="form" action="">
+            <textarea name="message" id="message"
+                placeholder="Enter your trip description. Do not give instructions on formatting. Simply give it a description of what you want out of the trip and any information you think it might need. &#10Depending on the length you will wait anywhere from 2 - 5 minutes. For now this is unavoidable. I am using the fastest version of chatGPT right now but there are tons of ways to make it faster. I am going to try to use autofill instead of chat which should make it vastly faster."></textarea>
+                <div class="loader"></div>
+            <container button>
+                <button class="Submit Button" type="submit"><svg stroke="currentColor" fill="none" stroke-width="2"
+                        viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-1"
+                        height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg></button>
+            </container>
+        </form>
+    </main>
+    <script>
+        const message = document.getElementById('message');
+        const form = document.getElementById('form');
+        const loader = document.querySelector('.loader');
+
+        message.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                form.dispatchEvent(new Event('submit'));
+            }
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            loader.style.display = 'block'; // show the loader
+            const messageText = message.value;
+            // message.value = '';
+            fetch('https://itineraryai.azurewebsites.net/api/GPTItinerary?', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: messageText })
+
+            })
+                .then(res => res.json())
+                .then(data => {
+
+                    sessionStorage.setItem("itinerary", data.completion.content);
+
+                    console.log(data.completion.content);
+                    const response = JSON.stringify(data.completion.content);
+                    const filename = 'response.json';
+
+                    fetch('https://itineraryai.azurewebsites.net/api/NewItinerary?', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ itinerary: data.completion.content })
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            console.log(data);
+                            //Go to ItinPage.ejs
+                            window.location.href = '/itinPage';
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        })
+                        .finally(() => {
+                            loader.style.display = 'none'; // hide the loader after the request is completed
+                        });
+
+                })
+        })
+    </script>
+</body>
+
+</html>
