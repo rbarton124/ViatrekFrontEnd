@@ -2,10 +2,15 @@
 <html lang="en">
 
 <head>
+    <!-- Meta Tags -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Itinerator 1.0</title>
+
+    <!-- Page Title -->
+    <title>Viatrek.ai 1.0</title>
+
+    <!-- External Stylesheets and Icons -->
     <link href="https://fonts.googleapis.com/css?family=Poppins&display=swap" rel="stylesheet">
     <link rel='stylesheet' href='/stylesheets/style.css' />
     <link rel="icon" href="./favicon.ico" type="image/x-icon">
@@ -13,74 +18,246 @@
 
 <body>
     <main>
-        <h1>Itinerator 1.0</h1>
-        <h2>Input Trip description</h2>
+        <!-- Page Header -->
+        <h1>Viatrek.ai 1.0</h1>
+
+        <!-- Form Section -->
         <form id="form" action="">
-            <textarea name="message" id="message"
-                placeholder="Enter your trip description. Do not give instructions on formatting. Simply give it a description of what you want out of the trip and any information you think it might need. &#10Depending on the length you will wait anywhere from 2 - 5 minutes. For now this is unavoidable. I am using the fastest version of chatGPT right now but there are tons of ways to make it faster. I am going to try to use autofill instead of chat which should make it vastly faster."></textarea>
-                <div class="loader"></div>
-            <container button>
-                <button class="Submit Button" type="submit"><svg stroke="currentColor" fill="none" stroke-width="2"
-                        viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-1"
-                        height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+            <div class="dropdowns-container">
+
+                <!-- Trip Dates Section -->
+                <div class="input-container">
+                    <label for="trip-dates">Trip Dates:</label>
+                    <div>
+                        <input type="date" id="start-date" name="trip-dates"> to <input type="date" id="end-date"
+                            name="trip-dates">
+                    </div>
+                </div>
+
+                <!-- Interests Section -->
+                <div class="input-container">
+                    <label for="interests">Interests:</label>
+                    <select id="interests" name="interests" multiple size="4">
+                        <option value="adventure">Adventure</option>
+                        <option value="beaches">Beaches</option>
+                        <option value="food">Food</option>
+                        <option value="hiking">Hiking</option>
+                        <option value="historical">Historical</option>
+                        <option value="museums">Museums</option>
+                        <option value="nature">Nature</option>
+                        <option value="nightlife">Nightlife</option>
+                        <option value="shopping">Shopping</option>
+                        <option value="sports">Sports</option>
+                        <option value="wildlife">Wildlife</option>
+                        <option value="culture">Cultural</option>
+                    </select>
+                    <div id="toggle-custom-interest-container">
+                        <a href="#" id="toggle-custom-interest">Add custom interest</a>
+                    </div>
+                    <div id="custom-interest-container" style="display: none;">
+                        <div class="input-group"> <!-- Wrap input and button inside a div -->
+                            <input type="text" id="custom-interest" placeholder="Toggle custom interest">
+                            <button id="add-interest-button" type="button">Add</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vacation Type Section -->
+                <div class="input-container">
+                    <label for="vacation-type">Vacation Type:</label>
+                    <select id="vacation-type" name="vacation-type">
+                        <option value=''></option>
+                        <option value="adventure-trip">Adventure Trip</option>
+                        <option value="family-vacation">Family Vacation</option>
+                        <option value="honeymoon">Honeymoon</option>
+                        <option value="luxury-trip">Luxury Trip</option>
+                        <option value="reunion">Reunion</option>
+                        <option value="romantic-vacation">Romantic Vacation</option>
+                        <option value="solo-trip">Solo Trip</option>
+                        <option value="wellness-retreat">Wellness Retreat</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <!-- Trip Description Section -->
+            <section>
+                <textarea name="message" id="message" placeholder="Enter your trip description..."></textarea>
+            </section>
+
+            <!-- Additional Info-->
+            <div id="additional-info"></div>
+
+            <!-- Submit Button Section -->
+            <section>
+                <button class="Submit Button" type="submit">
+                    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round"
+                        stroke-linejoin="round" class="h-4 w-4 mr-1" height="1em" width="1em"
+                        xmlns="http://www.w3.org/2000/svg">
                         <line x1="22" y1="2" x2="11" y2="13"></line>
                         <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg></button>
-            </container>
+                    </svg>
+                </button>
+            </section>
+            <div class="loader"></div>
         </form>
     </main>
+
     <script>
-        const message = document.getElementById('message');
+        // Cached Elements
         const form = document.getElementById('form');
+        const message = document.getElementById('message');
         const loader = document.querySelector('.loader');
 
-        message.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                form.dispatchEvent(new Event('submit'));
-            }
+        // Event Listeners
+        document.getElementById('toggle-custom-interest').addEventListener('click', toggleCustomInterest);
+        document.getElementById('add-interest-button').addEventListener('click', addCustomInterest);
+        form.addEventListener('submit', handleSubmit);
+        message.addEventListener('keydown', handleEnterKey);
+        ['start-date', 'end-date', 'interests', 'vacation-type'].forEach(id => {
+            document.getElementById(id).addEventListener('change', updateAdditionalInfo);
         });
 
-        form.addEventListener('submit', (e) => {
+        /**
+         * Toggle the visibility of the custom interest container.
+         */
+        function toggleCustomInterest(e) {
             e.preventDefault();
-            loader.style.display = 'block'; // show the loader
-            const messageText = message.value;
-            // message.value = '';
+            const container = document.getElementById('custom-interest-container');
+            const toggleText = document.getElementById('toggle-custom-interest');
+            if (container.style.display === 'none' || container.style.display === '') {
+                container.style.display = 'block';
+                toggleText.textContent = 'Hide custom interest';  // updated text
+            } else {
+                container.style.display = 'none';
+                toggleText.textContent = 'Add custom interest';  // original text
+            }
+        }
+
+        function sortSelectOptions(selectElement) {
+            const optionsArray = Array.from(selectElement.options);
+            optionsArray.sort((a, b) => a.text.localeCompare(b.text, undefined, { numeric: true, sensitivity: 'base' }));
+            selectElement.innerHTML = '';
+            optionsArray.forEach(option => selectElement.add(option));
+        }
+
+        window.onload = () => {
+            sortSelectOptions(document.getElementById('interests'));
+            sortSelectOptions(document.getElementById('vacation-type'));
+        };
+
+        /**
+         * Add a custom interest to the interests select element.
+         */
+        function addCustomInterest() {
+            const customInterest = document.getElementById('custom-interest').value;
+            if (customInterest) {
+                const newOption = document.createElement('option');
+                newOption.value = customInterest;
+                newOption.text = customInterest;
+                newOption.selected = true;
+                document.getElementById('interests').add(newOption);
+                document.getElementById('custom-interest').value = '';
+                updateAdditionalInfo();
+            }
+        }
+
+        /**
+         * Handle the form submission.
+         */
+        function handleSubmit(e) {
+            e.preventDefault();
+            loader.style.display = 'block';  // show the loader
+
+            // Get user input values
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            const interests = Array.from(document.getElementById('interests').selectedOptions)
+                .map(option => option.value).join(', ');
+            const vacationType = document.getElementById('vacation-type').value;
+
+            // Construct additional info string
+            let additionalInfo = '';
+
+            if (startDate && endDate) {
+                additionalInfo += `\nTrip Dates: ${startDate} to ${endDate}\n`;
+            }
+
+            if (interests) {
+                additionalInfo += `\nInterests: ${interests}\n`;
+            }
+
+            if (vacationType) {
+                additionalInfo += `\nVacation Type: ${vacationType}\n`;
+            }
+
+            // Construct message text
+            const messageText = message.value + additionalInfo;
+            console.log(messageText);
+
+            // Send POST request
             fetch('https://itineraryai.azurewebsites.net/api/GPTItinerary?', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: messageText })
-
             })
                 .then(res => res.json())
                 .then(data => {
-
                     sessionStorage.setItem("itinerary", data.completion.content);
-
-                    console.log(data.completion.content);
-                    const response = JSON.stringify(data.completion.content);
-                    const filename = 'response.json';
-
-                    fetch('https://itineraryai.azurewebsites.net/api/NewItinerary?', {
+                    return fetch('https://itineraryai.azurewebsites.net/api/NewItinerary?', {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ itinerary: data.completion.content })
-                    })
-                        .then(res => res.json())
-                        .then(data => {
-                            console.log(data);
-                            //Go to ItinPage.ejs
-                            window.location.href = '/itinPage';
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                        })
-                        .finally(() => {
-                            loader.style.display = 'none'; // hide the loader after the request is completed
-                        });
-
+                    });
                 })
-        })
+                .then(res => res.json())
+                .then(data => {
+                    window.location.href = '/itinPage';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                })
+                .finally(() => {
+                    loader.style.display = 'none';  // hide the loader after the request is completed
+                });
+        }
+
+        /**
+         * Handle the Enter key press in the message textarea.
+         */
+        function handleEnterKey(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                form.dispatchEvent(new Event('submit'));
+            }
+        }
+
+        /**
+         * Update the additional info section based on user input.
+         */
+        function updateAdditionalInfo() {
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            const interests = Array.from(document.getElementById('interests').selectedOptions)
+                .map(option => option.value).join(', ');
+            const vacationType = document.getElementById('vacation-type').value;
+
+            let additionalInfo = '';
+
+            if (startDate && endDate) {
+                additionalInfo += `Trip Dates: ${startDate} to ${endDate}\n`;
+            }
+
+            if (interests) {
+                additionalInfo += `Interests: ${interests}\n`;
+            }
+
+            if (vacationType) {
+                additionalInfo += `Vacation Type: ${vacationType}\n`;
+            }
+
+            document.getElementById('additional-info').innerText = additionalInfo;
+        }
     </script>
 </body>
 
