@@ -27,6 +27,12 @@ main {
     align-items: center;
 }
 
+.logo {
+    width: 150px; /* or whatever size you desire */
+    margin-bottom: 20px; /* adjust spacing as needed */
+}
+
+
 h1 {
     font-size: 24px;
     color: #70A597;
