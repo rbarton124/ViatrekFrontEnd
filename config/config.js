@@ -1,6 +1,6 @@
 module.exports = {
-    googleApiKey: process.env.GOOGLEIMAGES_APIKEY,
-    cx: '31a4a650f687741bf',
-    OPENAI_ORG_ID: "org-tnB2P1d1CPtfcJSWNY0JGAct",
-    OPENAI_API_KEY: process.env.OPENAI_APIKEY,
-  };
+  googleApiKey: 'YOUR_CONSUMER_KEY_HERE',
+  cx: 'YOUR_CONSUMER_KEY_HERE',
+  OPENAI_ORG_ID: 'YOUR_CONSUMER_KEY_HERE',
+  OPENAI_API_KEY: 'YOUR_CONSUMER_KEY_HERE',
+};
